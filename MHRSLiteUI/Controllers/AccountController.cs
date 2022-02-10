@@ -191,7 +191,7 @@ namespace MHRSLiteUI.Controllers
                 var result = await _signInManager.PasswordSignInAsync(model.UserName, model.Password, model.RememberMe, true);
                 if (result.Succeeded)
                 {
-                    return RedirectToAction("Index", "Home");          
+                    return RedirectToAction("Index", "Home");
                 }
                 else
                 {
@@ -215,6 +215,100 @@ namespace MHRSLiteUI.Controllers
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
+        }
+        #endregion
+
+        #region ResetPassword
+        [HttpGet]
+        public IActionResult ResetPassword()
+        {
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(string email)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user == null)
+                {
+                    ViewBag.ResetPasswordMessage = "Girdiğiniz e-mail adresi ile kayıtlı bir kullanıcı bulunamadı.";
+                }
+                else
+                {
+                    var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                    var callBackUrl = Url.Action("ConfirmResetPassword", "Account", new { userId = user.Id, code = code }, protocol: Request.Scheme);
+                    var emailMessage = new EmailMessage()
+                    {
+                        Subject = "MHRSLITE - Parola yenileme",
+                        Body = $"Yeni parola belirlemek için <a href='{HtmlEncoder.Default.Encode(callBackUrl)}'>buraya</a> tıkayınız.",
+                    };
+                    await _emailSender.SendAsync(emailMessage);
+                    ViewBag.ResetPasswordMessage = "Parola güncelleme yönergesi e-mail adresinize gönderilmiştir. Lütfen gelen kutunuzu kontrol edin.";
+
+                }
+                return View();
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ResetPasswordMessage = "Beklenmedik bir hata oluştu!";
+                return View();
+            }
+        }
+        #endregion
+
+        #region ConfirmResetPassword
+        [HttpGet]
+        public IActionResult ConfirmResetPassword(string userId, string code)
+        {
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(code))
+            {
+                return BadRequest("deneme");
+            }
+
+            ViewBag.UserId = userId;
+            ViewBag.Code = code;
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ConfirmResetPassword(ResetPasswordViewModel model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return View(model);
+                }
+
+                var user = await _userManager.FindByIdAsync(model.UserId);
+                if (user == null)
+                {
+                    ModelState.AddModelError(string.Empty, "Kullanıcı bulunamadı");
+                    return View(model);
+                }
+
+                var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Code));
+
+                var result = await _userManager.ResetPasswordAsync(user, code, model.NewPassword);
+
+                if (result.Succeeded)
+                {
+                    TempData["ConfirmResetPasswordMessage"] = "Parolanız güncellenmiştir. Yeni parolanızla giriş yapabilirsiniz";
+                    return RedirectToAction("Login", "Account");
+                }
+                else
+                {
+                    ModelState.AddModelError("", "Parola güncelleme işleminde bir hata oluştu!");
+                    return View();
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Beklenmedik bir hata oluştu!");
+                return View(model);
+            }
         } 
         #endregion
     }
