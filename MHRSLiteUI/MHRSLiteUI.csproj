@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MHRSLiteDataLayer\MHRSLiteDataLayer.csproj" />
+    <ProjectReference Include="..\MHRSLiteBusinessLayer\MHRSLiteBusinessLayer.csproj" />
     <ProjectReference Include="..\MHRSLiteEntityLayer\MHRSLiteEntityLayer.csproj" />
   </ItemGroup>
 
