@@ -12,6 +12,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using MHRSLiteBusinessLayer.EmailService;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MHRSLiteUI.Controllers
 {
@@ -166,9 +167,55 @@ namespace MHRSLiteUI.Controllers
                 ViewBag.EmailConfirmedMessage = "Beklenmedik bir hata oluştu! Tekrar deneyiniz.";
                 return View();
             }
-        } 
+        }
         #endregion
 
+        #region Login
+        [HttpGet]
+        public IActionResult Login()
+        {
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> Login(LoginViewModel model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    ModelState.AddModelError("", "Geçersiz veri girişi yapıldı. Verilerinizi uygun şekilde giririniz.");
+                    return View(model);
 
+                }
+
+                var result = await _signInManager.PasswordSignInAsync(model.UserName, model.Password, model.RememberMe, true);
+                if (result.Succeeded)
+                {
+                    return RedirectToAction("Index", "Home");          
+                }
+                else
+                {
+                    ModelState.AddModelError("", "Kullanıcı adı veya şifre hatalıdır.");
+                    return View(model);
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Beklenmedik bir hata oluştu.");
+                return View(model);
+
+            }
+        }
+        #endregion
+
+        #region Logout
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Index", "Home");
+        } 
+        #endregion
     }
 }
