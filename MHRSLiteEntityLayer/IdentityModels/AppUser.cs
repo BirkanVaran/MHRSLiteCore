@@ -1,4 +1,5 @@
 ﻿using MHRSLiteEntityLayer.Enums;
+using MHRSLiteEntityLayer.Model;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
@@ -29,6 +30,9 @@ namespace MHRSLiteEntityLayer.IdentityModels
         [Required(ErrorMessage ="Cinsiyet seçimi gereklidir.")]
         public Genders Gender { get; set; }
 
+        //
+        public virtual List<Doctor> Doctors { get; set; }
+        public virtual List<Patient> Patients { get; set; }
 
 
     }
