@@ -24,6 +24,6 @@ namespace MHRSLiteEntityLayer.Model
 
         // HospitalClinics ile ilişki kuruluyor.
 
-        public virtual List<HospitalClinics> HospitalClinics { get; set; }
+        public virtual List<HospitalClinic> HospitalClinics { get; set; }
     }
 }

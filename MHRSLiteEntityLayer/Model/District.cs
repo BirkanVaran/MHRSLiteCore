@@ -15,7 +15,7 @@ namespace MHRSLiteEntityLayer.Model
         [StringLength(50, MinimumLength = 2, ErrorMessage = "İlçe adı 2-50 karakter aralığında olmaldırı.")]
         public string DistrictName { get; set; }
 
-        public int CityId { get; set; }
+        public byte CityId { get; set; }
 
         [ForeignKey("CityId")]
         public virtual City City { get; set; }

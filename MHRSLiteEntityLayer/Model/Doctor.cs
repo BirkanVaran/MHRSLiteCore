@@ -16,6 +16,6 @@ namespace MHRSLiteEntityLayer.Model
 
         [ForeignKey("UserId")]
         public virtual AppUser AppUser { get; set; }
-        public virtual List<HospitalClinics> HospitalClinics { get; set; }
+        public virtual List<HospitalClinic> HospitalClinics { get; set; }
     }
 }
