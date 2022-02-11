@@ -8,6 +8,13 @@ namespace MHRSLiteBusinessLayer.Contracts
 {
     public interface IUnitOfWork : IDisposable
     {
-      public  ICityRepository CityRepository { get; set; }
+        ICityRepository CityRepository { get; }
+        IDistrictRepository DistrictRepository { get; }
+
+        IDoctorRepository DoctorRepository { get; }
+
+        IPatientRepository PatientRepository { get; }
+
+
     }
 }
