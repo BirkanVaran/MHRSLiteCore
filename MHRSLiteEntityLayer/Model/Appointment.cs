@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace MHRSLiteEntityLayer.Model
 {
     [Table("Appointments")]
-    public class Appointment
+    public class Appointment : Base<int>
     {
         public string PatientId { get; set; }
         public int HospitalClinicId { get; set; }
@@ -18,7 +18,7 @@ namespace MHRSLiteEntityLayer.Model
         public DateTime AppointmentDate { get; set; }
 
         [Required]
-        [StringLength(5,MinimumLength =5,ErrorMessage ="Randevu saati SS:DD formatında olmalıdır.")]
+        [StringLength(5, MinimumLength = 5, ErrorMessage = "Randevu saati SS:DD formatında olmalıdır.")]
         public string AppointmentHour { get; set; }
         [ForeignKey("PatientId")]
         public virtual Patient Patient { get; set; }

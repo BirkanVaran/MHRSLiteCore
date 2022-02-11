@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace MHRSLiteEntityLayer.Model
 {
     [Table("Hospitals")]
-    public class Hospital
+    public class Hospital : Base<int>
     {
         [Required]
         [StringLength(400, MinimumLength = 2, ErrorMessage = "Hastane adı 2-50 karakter aralığında olmalıdır.")]
