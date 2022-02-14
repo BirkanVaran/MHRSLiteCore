@@ -11,10 +11,10 @@ namespace MHRSLiteBusinessLayer.Implementations
 {
     public class HospitalClinicRepository : Repository<HospitalClinic>, IHospitalClinicRepository
     {
-        private readonly MyContext _mycontext;
+       
         public HospitalClinicRepository(MyContext myContext) : base(myContext)
         {
-            _mycontext = myContext;
+           
         }
     }
 }

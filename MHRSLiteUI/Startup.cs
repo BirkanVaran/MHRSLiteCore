@@ -1,6 +1,11 @@
+using MHRSLiteBusinessLayer.Contracts;
+using MHRSLiteBusinessLayer.EmailService;
+using MHRSLiteBusinessLayer.Implementations;
 using MHRSLiteDataLayer;
+using MHRSLiteEntityLayer.IdentityModels;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,7 +34,34 @@ namespace MHRSLiteUI
             {
                 options.UseSqlServer(Configuration.GetConnectionString("SqlConnection"));
             });
+            // ###########################################################
+
+            services.AddScoped<IUnitOfWork, UnitOfWork>(); // IUnitOfWork gördüðün zaman bana UnitOfWork nesnesi üret.
+            services.AddScoped<IEmailSender, EmailSender>(); // IEmailSender gördüðün zaman bana EmailSender nesnesi üret.
+
+            // ###########################################################
             services.AddControllersWithViews();
+            services.AddRazorPages();
+            services.AddMvc();
+            services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromSeconds(60);
+            });
+
+            // ###########################
+
+            services.AddIdentity<AppUser, AppRole>(
+                opts =>
+                {
+                    opts.User.RequireUniqueEmail = true;
+                    opts.Password.RequiredLength = 6;
+                    opts.Password.RequireNonAlphanumeric = false;
+                    opts.Password.RequireLowercase = false;
+                    opts.Password.RequireUppercase = false;
+                    opts.Password.RequireDigit = false;
+                    opts.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._";
+                }).AddDefaultTokenProviders().AddEntityFrameworkStores<MyContext>();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -48,6 +80,13 @@ namespace MHRSLiteUI
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.UseStaticFiles(); // wwwroot klasörünün kullanýlabilmesi için
+            app.UseRouting(); //rooting mekanizmasý için
+            app.UseSession(); // session oturum mekanizmasý için
+            app.UseAuthentication(); //login logout kullanabilmek için
+            app.UseAuthorization(); //authorization attiribute kullanabilmek için
+
 
             app.UseEndpoints(endpoints =>
             {

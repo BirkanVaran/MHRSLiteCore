@@ -11,7 +11,7 @@ namespace MHRSLiteBusinessLayer.Implementations
 {
   public  class PatientRepository:Repository<Patient>,IPatientRepository
     {
-        private readonly MyContext _mycontext;
+        
         public PatientRepository(MyContext myContext) :base(myContext)
         {
 
