@@ -13,6 +13,8 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using MHRSLiteBusinessLayer.EmailService;
 using Microsoft.AspNetCore.Authorization;
+using MHRSLiteBusinessLayer.Contracts;
+using MHRSLiteEntityLayer.Model;
 
 namespace MHRSLiteUI.Controllers
 {
@@ -26,11 +28,16 @@ namespace MHRSLiteUI.Controllers
 
         private readonly IEmailSender _emailSender;
 
+        private readonly IUnitOfWork _unitOfWork;
+
         // Dependency Injection
         public AccountController(
             UserManager<AppUser> userManager,
             SignInManager<AppUser> signInManager,
-            RoleManager<AppRole> roleManager, IEmailSender emailSender)
+            RoleManager<AppRole> roleManager,
+            IEmailSender emailSender,
+            IUnitOfWork unitOfWork)
+            
 
 
         {
@@ -38,6 +45,8 @@ namespace MHRSLiteUI.Controllers
             _signInManager = signInManager;
             _roleManager = roleManager;
             _emailSender = emailSender;
+            _unitOfWork = unitOfWork;
+
             CheckRoles();
         }
 
@@ -73,10 +82,10 @@ namespace MHRSLiteUI.Controllers
                 {
                     return View(model);
                 }
-                var checkUserName = await _userManager.FindByIdAsync(model.UserName);
+                var checkUserName = await _userManager.FindByIdAsync(model.TCNumber);
                 if (checkUserName != null)
                 {
-                    ModelState.AddModelError(nameof(model.UserName), "Kullanıcı adı zaten mevcut.");
+                    ModelState.AddModelError(nameof(model.TCNumber), "Bu TCKN sistemde zaten mevcut.");
                     return View(model);
                 }
                 var checkUserForEmail = await _userManager.FindByEmailAsync(model.Email);
@@ -88,10 +97,11 @@ namespace MHRSLiteUI.Controllers
                 // Yeni kullanıcı oluşturulabilir.
                 AppUser newUser = new AppUser()
                 {
+                    
                     Email = model.Email,
                     Name = model.Name,
                     Surname = model.Surname,
-                    UserName = model.UserName,
+                    UserName = model.TCNumber,
                     Gender = model.Gender
                     //TODO: BirthDate?
                     //TODO: PhoneNumber?
@@ -100,6 +110,16 @@ namespace MHRSLiteUI.Controllers
                 if (result.Succeeded)
                 {
                     var roleResult = _userManager.AddToRoleAsync(newUser, RoleNames.Patient.ToString());
+                    // Patient tablosuna ekleme yapılmalıdır.
+                    Patient newPatient = new Patient()
+                    {
+                        TCNumber = model.TCNumber,
+                        UserId = newUser.Id
+                    };
+                    if (_unitOfWork.PatientRepository.Add(newPatient)== false)
+                    {
+                        // sistem yöneticisine email gitsin.
+                    }
                     // Email gönderilmelidir.
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(newUser);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));

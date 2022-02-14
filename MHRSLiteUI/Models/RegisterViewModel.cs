@@ -9,9 +9,9 @@ namespace MHRSLiteUI.Models
 {
     public class RegisterViewModel
     {
-        [Display(Name = "Kullanıcı Adı")]
-        [Required(ErrorMessage = "Kullanıcı adı alanı gereklidir")]
-        public string UserName { get; set; }
+        //[Display(Name = "Kullanıcı Adı")]
+        //[Required(ErrorMessage = "Kullanıcı adı alanı gereklidir")]
+        //public string UserName { get; set; }
         [Required(ErrorMessage = "Ad alanı gereklidir.")]
         [Display(Name = "Ad")]
         [StringLength(50)]
@@ -28,14 +28,18 @@ namespace MHRSLiteUI.Models
         [Display(Name = "Şifre")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
-        [Required(ErrorMessage = "Şifre tekrar alanı gereklidir.")]
-        [DataType(DataType.Password)]
-        [Display(Name = "Şifre Tekrar")]
-        [Compare(nameof(Password), ErrorMessage = "Şifreler uyuşmuyor")]
-        public string ConfirmPassword { get; set; }
+        //[Required(ErrorMessage = "Şifre tekrar alanı gereklidir.")]
+        //[DataType(DataType.Password)]
+        //[Display(Name = "Şifre Tekrar")]
+        //[Compare(nameof(Password), ErrorMessage = "Şifreler uyuşmuyor")]
+        //public string ConfirmPassword { get; set; }
 
         [Required(ErrorMessage = "Cinsiyet bilgisi gereklidir.")]
         public Genders Gender { get; set; }
+
+        [Display(Name = "TCKN")]
+        [StringLength(11,MinimumLength =11)]
+        public string TCNumber { get; set; }
 
     }
 }

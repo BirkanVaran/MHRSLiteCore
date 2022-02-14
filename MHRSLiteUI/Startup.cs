@@ -38,6 +38,7 @@ namespace MHRSLiteUI
 
             services.AddScoped<IUnitOfWork, UnitOfWork>(); // IUnitOfWork gördüðün zaman bana UnitOfWork nesnesi üret.
             services.AddScoped<IEmailSender, EmailSender>(); // IEmailSender gördüðün zaman bana EmailSender nesnesi üret.
+            services.AddControllersWithViews().AddRazorRuntimeCompilation(); // Çalýþýrken razor penceresinde yapýlan deðiþkiliklerin sayfaya yansýmasý.
 
             // ###########################################################
             services.AddControllersWithViews();
