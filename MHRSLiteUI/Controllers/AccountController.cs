@@ -105,7 +105,9 @@ namespace MHRSLiteUI.Controllers
                     Name = model.Name,
                     Surname = model.Surname,
                     UserName = model.TCNumber,
-                    Gender = model.Gender
+                    Gender = model.Gender,
+                    BirthDate=model.BirthDate
+                    
                     //TODO: Birthdate?
                     //TODO: Phone Number?
                 };
@@ -224,6 +226,17 @@ namespace MHRSLiteUI.Controllers
 
                 }
 
+                // User'ı bulup EmailConfirmed mi, kontrol edilsin.
+                var user = await _userManager.FindByNameAsync(model.UserName);
+                if (user!=null)
+                {
+                    if (user.EmailConfirmed==false)
+                    {
+                        ModelState.AddModelError("", "Sistemi kullanabilmeniz için üyeliğinizi aktifleştirmeniz gerekmektedir. Emailinize gönderilen aktivasyon linkine tıklayarak aktifleştirme işlemini yapabilirsiniz!");
+                        return View(model);
+                    }
+                }
+
                 var result = await _signInManager.PasswordSignInAsync(model.UserName, model.Password, model.RememberMe, true);
                 if (result.Succeeded)
                 {
@@ -277,8 +290,11 @@ namespace MHRSLiteUI.Controllers
                     var callBackUrl = Url.Action("ConfirmResetPassword", "Account", new { userId = user.Id, code = code }, protocol: Request.Scheme);
                     var emailMessage = new EmailMessage()
                     {
-                        Subject = "MHRSLITE - Parola yenileme",
-                        Body = $"Yeni parola belirlemek için <a href='{HtmlEncoder.Default.Encode(callBackUrl)}'>buraya</a> tıkayınız.",
+                        Contacts = new string[] { user.Email },
+                        Subject = "MHRSLITE - Şifremi unuttum",
+                        Body = $"Merhaba {user.Name} {user.Surname}," +
+                       $" <br/>Yeni parola belirlemek için" +
+                       $" <a href='{HtmlEncoder.Default.Encode(callBackUrl)}'>buraya</a> tıklayınız. "
                     };
                     await _emailSender.SendAsync(emailMessage);
                     ViewBag.ResetPasswordMessage = "Parola güncelleme yönergesi e-mail adresinize gönderilmiştir. Lütfen gelen kutunuzu kontrol edin.";
@@ -300,7 +316,8 @@ namespace MHRSLiteUI.Controllers
         {
             if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(code))
             {
-                return BadRequest("deneme");
+                ModelState.AddModelError(string.Empty, "Kullanıcı bulunamadı.");
+                return View();
             }
 
             ViewBag.UserId = userId;
@@ -311,6 +328,7 @@ namespace MHRSLiteUI.Controllers
         [HttpPost]
         public async Task<IActionResult> ConfirmResetPassword(ResetPasswordViewModel model)
         {
+
             try
             {
                 if (!ModelState.IsValid)
@@ -331,7 +349,7 @@ namespace MHRSLiteUI.Controllers
 
                 if (result.Succeeded)
                 {
-                    TempData["ConfirmResetPasswordMessage"] = "Parolanız güncellenmiştir. Yeni parolanızla giriş yapabilirsiniz";
+                    TempData["ConfirmResetPasswordMessage"] = "Parolanız güncellenmiştir. Yeni parolanızla giriş yapabilirsiniz.";
                     return RedirectToAction("Login", "Account");
                 }
                 else

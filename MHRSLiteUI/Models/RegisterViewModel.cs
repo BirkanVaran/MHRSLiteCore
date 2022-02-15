@@ -41,5 +41,9 @@ namespace MHRSLiteUI.Models
         [StringLength(11,MinimumLength =11)]
         public string TCNumber { get; set; }
 
+        [Display(Name="Doğum Tarihi")]
+        [DataType(DataType.DateTime)]
+        public DateTime BirthDate { get; set; }
+
     }
 }
