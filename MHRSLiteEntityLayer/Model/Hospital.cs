@@ -17,6 +17,15 @@ namespace MHRSLiteEntityLayer.Model
 
         public int DistrictId { get; set; }
 
+        [StringLength(500, ErrorMessage = "Adres bilgisi en fazla 500 karakter olmalıdır.")]
+        public string Address { get; set; }
+        [StringLength(10, MinimumLength = 10, ErrorMessage = "Telefon numarası başında 0 olmadan, 10 haneli olarak girilmelidir.")]
+        public string PhoneNumber { get; set; }
+        [DataType(DataType.EmailAddress)]
+        public string Email { get; set; }
+        public string Longitude { get; set; }
+        public string Latitude { get; set; }
+
 
         // İlçe tablosuyla ilişki kuruluyor.
         [ForeignKey("DistrictId")]

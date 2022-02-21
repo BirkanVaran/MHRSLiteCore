@@ -4,14 +4,16 @@ using MHRSLiteDataLayer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace MHRSLiteDataLayer.Migrations
 {
     [DbContext(typeof(MyContext))]
-    partial class MyContextModelSnapshot : ModelSnapshot
+    [Migration("20220221084612_HospitalTableUpdated")]
+    partial class HospitalTableUpdated
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -283,7 +285,7 @@ namespace MHRSLiteDataLayer.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("Address")
+                    b.Property<string>("Adress")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
@@ -304,7 +306,7 @@ namespace MHRSLiteDataLayer.Migrations
                     b.Property<string>("Latitude")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Longitude")
+                    b.Property<string>("Longitute")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
