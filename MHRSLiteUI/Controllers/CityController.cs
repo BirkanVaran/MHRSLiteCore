@@ -44,7 +44,7 @@ namespace MHRSLiteUI.Controllers
                 var data = _unitOfWork.DistrictRepository
                     .GetAll(x => x.CityId == id, orderBy: x => x.OrderBy(y => y.DistrictName));
 
-                ViewBag.Clinics = _unitOfWork.ClinicRepository.GetAll(orderBy: x => x.OrderBy(a => a.ClinicName));
+                ViewBag.Clinics = _unitOfWork.ClinicRepository.GetAll(orderBy: x => x.OrderBy(y => y.ClinicName));
                 return Json(new { isSuccess = true, data });
             }
             catch (Exception ex)
