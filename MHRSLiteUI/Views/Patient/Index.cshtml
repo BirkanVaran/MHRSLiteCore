@@ -4,6 +4,14 @@
     Layout = "~/Views/Shared/_LayoutMHRS.cshtml";
 }
 
+@if (!string.IsNullOrEmpty(TempData["SaveAppointmentStatus"] as String))
+{
+<div class="alert alert-warning" role="alert">
+    @TempData["SaveAppointmentStatus"]
+</div>
+}
+
+
 <div class="row">
 
     <div class="col-md-4">
