@@ -11,6 +11,7 @@ namespace MHRSLiteEntityLayer.Model
     [Table("Appointments")]
     public class Appointment : Base<int>
     {
+        [Required]
         public string PatientId { get; set; }
         public int HospitalClinicId { get; set; }
 
