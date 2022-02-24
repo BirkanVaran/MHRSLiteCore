@@ -71,10 +71,12 @@ namespace MHRSLiteUI.Controllers
 
         [Authorize]
         public IActionResult FindAppointment(int cityid, int? distid,
-           int cid, int? hid, int? dr)
+    int cid, int? hid, int? dr)
         {
             try
             {
+                TempData["ClinicId"] = cid;
+                TempData["HospitalId"] = hid.Value;
                 //Dışarıdan gelen hid ve clinicid'nin olduğu HospitalClinic kayıtlarını al
                 var data = _unitOfWork.HospitalClinicRepository
                     .GetAll(x => x.ClinicId == cid
@@ -137,7 +139,7 @@ namespace MHRSLiteUI.Controllers
                     }
                 }
 
-                list = list.Distinct().OrderBy(x => x).ToList();
+                list = list.Distinct().OrderBy(x => x.Doctor.AppUser.Name).ToList();
                 return View(list);
 
 
@@ -155,15 +157,24 @@ namespace MHRSLiteUI.Controllers
         {
             try
             {
+
                 var list = new List<AvailableDoctorAppointmentHoursViewModel>();
 
-                var data = _unitOfWork.AppointmentHourRepository
-                     .GetFirstOrDefault(x => x.HospitalClinicId == hcid);
+                var data = _unitOfWork.
+                    AppointmentHourRepository.
+                    GetFirstOrDefault(x => x.HospitalClinicId == hcid);
+
                 var hospitalClinicData =
                          _unitOfWork.HospitalClinicRepository
                          .GetFirstOrDefault(x => x.Id == hcid);
+                Doctor dr = _unitOfWork.DoctorRepository
+                    .GetFirstOrDefault(x => x.TCNumber == hospitalClinicData.DoctorId
+                    , includeProperties: "AppUser");
+                ViewBag.Doctor = "Dr." + dr.AppUser.Name + " " + dr.AppUser.Surname;
+
 
                 var hours = data.Hours.Split(',');
+
                 var appointment = _unitOfWork
                     .AppointmentRepository
                     .GetAll(
@@ -174,19 +185,22 @@ namespace MHRSLiteUI.Controllers
                     x.AppointmentDate < DateTime.Now.AddDays(2)
                     )
                     ).ToList();
+
                 foreach (var houritem in hours)
                 {
                     string myHourBase = houritem.Substring(0, 2) + ":00";
                     var appointmentHourData =
-                        new AvailableDoctorAppointmentHoursViewModel()
-                        {
-                            AppointmentDate = DateTime.Now.AddDays(1),
-                            Doctor =
-                               _unitOfWork.DoctorRepository
-                               .GetFirstOrDefault(x => x.TCNumber == hospitalClinicData.DoctorId),
-                            HourBase = myHourBase
-                        };
-                    list.Add(appointmentHourData);
+                      new AvailableDoctorAppointmentHoursViewModel()
+                      {
+                          AppointmentDate = DateTime.Now.AddDays(1),
+                          Doctor = dr,
+                          HourBase = myHourBase,
+                          HospitalClinicId = hcid
+                      };
+                    if (list.Count(x => x.HourBase == myHourBase) == 0)
+                    {
+                        list.Add(appointmentHourData);
+                    }
                     if (appointment.Count(
                         x =>
                         x.AppointmentDate == (
@@ -196,24 +210,22 @@ namespace MHRSLiteUI.Controllers
                     {
                         if (list.Count(x => x.HourBase == myHourBase) > 0)
                         {
-                            appointmentHourData.Hours.Add(houritem);
+                            list.Find(x => x.HourBase == myHourBase
+                                ).Hours.Add(houritem);
                         }
                     }
-
                 }
-
-                list = list.Distinct().ToList();
                 return View(list);
-
-
             }
             catch (Exception)
             {
 
                 throw;
             }
-
         }
+
+
+
 
         [Authorize]
         public IActionResult FindAppointment_OncekiVersiyon(int cityid, int? distid, int cid, int? hid, int? dr)
