@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MHRSLiteEntityLayer.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -21,6 +22,8 @@ namespace MHRSLiteEntityLayer.Model
         [Required]
         [StringLength(5, MinimumLength = 5, ErrorMessage = "Randevu saati SS:DD formatında olmalıdır.")]
         public string AppointmentHour { get; set; }
+
+        public AppointmentStatus AppointmentStatus { get; set; }
         [ForeignKey("PatientId")]
         public virtual Patient Patient { get; set; }
 

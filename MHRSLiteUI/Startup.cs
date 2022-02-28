@@ -2,7 +2,9 @@ using MHRSLiteBusinessLayer.Contracts;
 using MHRSLiteBusinessLayer.EmailService;
 using MHRSLiteBusinessLayer.Implementations;
 using MHRSLiteDataLayer;
+using MHRSLiteEntityLayer.Enums;
 using MHRSLiteEntityLayer.IdentityModels;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -29,19 +31,31 @@ namespace MHRSLiteUI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // ASP.NET Core'un Connection String baðlantýsý yapabilmesi için, servislerine DbContext eklenmesi gerekir.
+            //Aspnet Core'un Connection String baðlantýsý yapabilmesi için 
+            //servislerine dbcontext eklenmesi gerekir.
             services.AddDbContext<MyContext>(options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("SqlConnection"));
             });
-            // ###########################################################
 
-            services.AddScoped<IUnitOfWork, UnitOfWork>(); // IUnitOfWork gördüðün zaman bana UnitOfWork nesnesi üret.
-            services.AddScoped<IEmailSender, EmailSender>(); // IEmailSender gördüðün zaman bana EmailSender nesnesi üret.
-            services.AddControllersWithViews().AddRazorRuntimeCompilation(); // Çalýþýrken razor penceresinde yapýlan deðiþkiliklerin sayfaya yansýmasý.
+            //********************************
+            //IUnitOfWork gördüðün zaman bana UnitOfWork nesnesi üret!
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            //IEmailSender gördüðün zaman bana EmailSender nesnesi üret!
+            services.AddScoped<IEmailSender, EmailSender>();
+            //IClaimsTransformation gördüðü zaman bizim yazdýðý classý üretecek!
+            services.AddScoped<IClaimsTransformation, ClaimProvider.ClaimProvider>();
+            //********************************
+            services.AddAuthorization(opts =>
+            {
+                opts.AddPolicy("GenderPolicy", policy =>
+                 policy.RequireClaim("gender", Genders.Kadýn.ToString())
+                );
+            });
 
-            // ###########################################################
-            services.AddControllersWithViews();
+
+            services.AddControllersWithViews()
+                .AddRazorRuntimeCompilation(); //Çalýþýrken razor sayfasýnda yapýlan deðiþikliklerin sayfaya yansýmasý için eklendi. 
             services.AddRazorPages();
             services.AddMvc();
             services.AddSession(options =>
@@ -49,19 +63,19 @@ namespace MHRSLiteUI
                 options.IdleTimeout = TimeSpan.FromSeconds(60);
             });
 
-            // ###########################
+            //**********************
+            services.AddIdentity<AppUser, AppRole>(opts =>
+            {
+                opts.User.RequireUniqueEmail = true;
+                opts.Password.RequiredLength = 6;
+                opts.Password.RequireNonAlphanumeric = false;
+                opts.Password.RequireLowercase = false;
+                opts.Password.RequireUppercase = false;
+                opts.Password.RequireDigit = false;
+                opts.User.AllowedUserNameCharacters =
+"abcdefgðhijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._";
+            }).AddDefaultTokenProviders().AddEntityFrameworkStores<MyContext>();
 
-            services.AddIdentity<AppUser, AppRole>(
-                opts =>
-                {
-                    opts.User.RequireUniqueEmail = true;
-                    opts.Password.RequiredLength = 6;
-                    opts.Password.RequireNonAlphanumeric = false;
-                    opts.Password.RequireLowercase = false;
-                    opts.Password.RequireUppercase = false;
-                    opts.Password.RequireDigit = false;
-                    opts.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._";
-                }).AddDefaultTokenProviders().AddEntityFrameworkStores<MyContext>();
 
         }
 
@@ -76,18 +90,11 @@ namespace MHRSLiteUI
             {
                 app.UseExceptionHandler("/Home/Error");
             }
-            app.UseStaticFiles();
-
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.UseStaticFiles(); // wwwroot klasörünün kullanýlabilmesi için
+            app.UseStaticFiles();//wwwroot klasörünün kullanýlabilmesi için
             app.UseRouting(); //rooting mekanizmasý için
             app.UseSession(); // session oturum mekanizmasý için
             app.UseAuthentication(); //login logout kullanabilmek için
             app.UseAuthorization(); //authorization attiribute kullanabilmek için
-
 
             app.UseEndpoints(endpoints =>
             {
@@ -100,7 +107,6 @@ namespace MHRSLiteUI
                     "management",
                     "management/{controller=Admin}/{action=Index}/{id?}"
                     );
-                        
             });
         }
     }
