@@ -16,9 +16,14 @@ namespace MHRSLiteBusinessLayer.Implementations
         private readonly MyContext _myContext;
         private readonly IMapper _mapper;
         private readonly UserManager<AppUser> _userManager;
-        public UnitOfWork(MyContext myContext)
+        public UnitOfWork(MyContext myContext,
+            IMapper mapper,
+            UserManager<AppUser> userManager)
         {
             _myContext = myContext;
+            _mapper = mapper;
+            _userManager = userManager;
+            //UnitOfWork tüm repositoryleri oluşturacak.
             CityRepository = new CityRepository(_myContext);
             DistrictRepository = new DistrictRepository(_myContext);
             DoctorRepository = new DoctorRepository(_myContext);
@@ -26,14 +31,13 @@ namespace MHRSLiteBusinessLayer.Implementations
             HospitalRepository = new HospitalRepository(_myContext);
             ClinicRepository = new ClinicRepository(_myContext);
             HospitalClinicRepository = new HospitalClinicRepository(_myContext);
-            AppointmentRepository = new AppointmentRepository(_myContext, _mapper, _userManager);
+            AppointmentRepository =
+                new AppointmentRepository(_myContext, _mapper, _userManager);
             AppointmentHourRepository = new AppointmentHourRepository(_myContext);
-
-
-
         }
 
         public ICityRepository CityRepository { get; private set; }
+
         public IDistrictRepository DistrictRepository { get; private set; }
 
         public IDoctorRepository DoctorRepository { get; private set; }

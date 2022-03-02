@@ -47,7 +47,8 @@ namespace MHRSLiteUI.Controllers
         }
 
         [Authorize]
-        public IActionResult Index(int pageNumberPast = 1, int pageNumberFuture = 1)
+        public IActionResult Index(int pageNumberPast = 1,
+            int pageNumberFuture = 1)
         {
             try
             {
@@ -124,6 +125,7 @@ namespace MHRSLiteUI.Controllers
                                 x.AppointmentDate == (
                                 Convert.ToDateTime(DateTime.Now.AddDays(1).ToShortDateString())) &&
                                 x.AppointmentHour == houritem
+
                                 ) == 0)
                             {
 
@@ -196,6 +198,7 @@ namespace MHRSLiteUI.Controllers
                     &&
                     x.AppointmentDate < DateTime.Now.AddDays(2)
                     )
+                    && x.AppointmentStatus != AppointmentStatus.Cancelled
                     ).ToList();
 
                 foreach (var houritem in hours)
@@ -322,7 +325,10 @@ namespace MHRSLiteUI.Controllers
                 DateTime appointmentDate = Convert.ToDateTime(date);
                 if (_unitOfWork.AppointmentRepository
                     .GetFirstOrDefault(x => x.AppointmentDate == appointmentDate
-                    && x.AppointmentHour == hour) != null)
+                    && x.AppointmentHour == hour
+                    &&
+                    x.AppointmentStatus != AppointmentStatus.Cancelled
+                    ) != null)
                 {
                     // aynı tarihe ve saate başka randevusu var
                     message = $"{date} - {hour} tarihinde bir kliniğe zaten randevu almışsınız. Aynı tarih ve saate başka randevu alınamaz!";
@@ -348,20 +354,24 @@ namespace MHRSLiteUI.Controllers
                 if (result)
                 {
                     // randevu bilgilerini pdf olarak emaille gönderilmesi isteniyor.
-                    var data = _unitOfWork.AppointmentRepository.GetAppointmentByID(HttpContext.User.Identity.Name, patientAppoinment.HospitalClinicId, patientAppoinment.AppointmentDate, patientAppoinment.AppointmentHour);
+                    //Yukarıda kayıt olan 
+                    var data = _unitOfWork.
+                        AppointmentRepository.GetAppointmentByID(
+                       HttpContext.User.Identity.Name,
+                       patientAppoinment.HospitalClinicId,
+                       patientAppoinment.AppointmentDate,
+                       patientAppoinment.AppointmentHour
+                        );
 
                     var user = _userManager.FindByNameAsync(HttpContext.User.Identity.Name).Result;
 
                     var emailMessage = new EmailMessage()
                     {
-                        Contacts = new string[] { },
-                        Subject = "MHRSLITE - Randevu Bilgileri",
-                        Body = $"Merhaba {user.Name} {user.Surname}, <br/> Randevu bilgileriniz pdf olarak ektedir."
-
+                        Contacts = new string[] { user.Email },
+                        Subject = "MHRSLITE -Randevu Bilgileri",
+                        Body = $"Merhaba {user.Name} {user.Surname}, <br/> randevu bilgileriniz pdf olarak ektedir."
                     };
-
                     _emailSender.SendAppointmentPdf(emailMessage, data);
-
 
                 }
                 return result ? Json(new { isSuccess = true, message })
@@ -382,37 +392,48 @@ namespace MHRSLiteUI.Controllers
             var message = string.Empty;
             try
             {
-                var appointment = _unitOfWork.AppointmentRepository.GetFirstOrDefault(x => x.Id == id);
+                var appointment = _unitOfWork.
+                                AppointmentRepository
+                                .GetFirstOrDefault(x => x.Id == id);
                 if (appointment != null)
                 {
                     appointment.AppointmentStatus = AppointmentStatus.Cancelled;
-                    var result = _unitOfWork.AppointmentRepository.Update(appointment);
-                    message = result ? "Randevunuz iptal edilmiştir." : "HATA! - Randevu iptal edilirken beklenmedik bir hata oluştu.";
-                    return result ? Json(new { isSuccess = true, message }) : Json(new { isSuccess = false, message });
+                    var result = _unitOfWork.AppointmentRepository
+                                .Update(appointment);
+                    message = result ?
+                                "Randevunuz iptal edildi!"
+                              : "HATA! Beklenmedik sorun oluştu!";
+
+                    return result ?
+                           Json(new { isSuccess = true, message })
+                                :
+                           Json(new { isSuccess = false, message });
                 }
                 else
                 {
-                    message = "HATA: Randevu bulunamadığı için iptal edilemedi.";
+                    message = "HATA: Randevu bulunamadığı için iptal edilemedi! Tekrar deneyiniz!";
                     return Json(new { isSuccess = false, message });
                 }
             }
             catch (Exception ex)
             {
+
                 message = "HATA: " + ex.Message;
                 return Json(new { isSuccess = false, message });
             }
         }
 
-
         [Authorize]
         [HttpPost]
-        public IActionResult UpcomingAppointmentExcelExport()
+        public IActionResult UpcomingAppointmentsExcelExport()
         {
             try
             {
-                DataTable dt = new DataTable();
+                DataTable dt = new DataTable("Grid");
                 var patientId = HttpContext.User.Identity.Name;
-                var data = _unitOfWork.AppointmentRepository.GetUpcomingAppointments(patientId);
+                var data = _unitOfWork.AppointmentRepository
+                                .GetUpcomingAppointments(patientId);
+
                 dt.Columns.Add("İL");
                 dt.Columns.Add("İLÇE");
                 dt.Columns.Add("HASTANE");
@@ -423,7 +444,9 @@ namespace MHRSLiteUI.Controllers
 
                 foreach (var item in data)
                 {
-                    var Doktor = item.HospitalClinic.Doctor.AppUser.Name + " " + item.HospitalClinic.Doctor.AppUser.Surname;
+                    var Doktor =
+                        item.HospitalClinic.Doctor.AppUser.Name + " "
+                        + item.HospitalClinic.Doctor.AppUser.Surname;
                     dt.Rows.Add(
                         item.HospitalClinic.Hospital.HospitalDistrict.City.CityName,
                         item.HospitalClinic.Hospital.HospitalDistrict.DistrictName,
@@ -433,17 +456,19 @@ namespace MHRSLiteUI.Controllers
                         item.AppointmentDate,
                         item.AppointmentHour);
                 }
-                // EXCEL Oluşturma
+                //EXCEL oluştur
                 using (XLWorkbook wb = new XLWorkbook())
                 {
                     wb.Worksheets.Add(dt);
                     using (MemoryStream stream = new MemoryStream())
                     {
                         wb.SaveAs(stream);
-                        // return file ile dosya tarayıcı penceresinde indirilir.
+                        //return File ile dosya ...
                         return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Grid.xlsx");
                     }
                 }
+
+
             }
             catch (Exception)
             {
@@ -451,5 +476,6 @@ namespace MHRSLiteUI.Controllers
                 throw;
             }
         }
+
     }
 }
