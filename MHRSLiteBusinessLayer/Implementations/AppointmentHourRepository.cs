@@ -9,12 +9,15 @@ using System.Threading.Tasks;
 
 namespace MHRSLiteBusinessLayer.Implementations
 {
-    public class AppointmentHourRepository : Repository<AppointmentHour>, IAppointmentHourRepository
+    public class AppointmentHourRepository
+         : Repository<AppointmentHour>, IAppointmentHourRepository
     {
-        
-        public AppointmentHourRepository(MyContext myContext) : base(myContext)
+        public AppointmentHourRepository(MyContext myContext)
+            : base(myContext)
         {
+
         }
+
 
     }
 }
