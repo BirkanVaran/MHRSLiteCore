@@ -18,6 +18,8 @@ namespace MHRSLiteBusinessLayer.Contracts
 
         // Randevu aldıktan sonra email içinde pdf halinde randevu bilgilerini göndermek için randevuyu bulmamız gerek.
         AppointmentVM GetAppointmentByID(string patientid, int hcid, DateTime AppointmentDate, string AppointmentHour);
+        List<AppointmentVM> GetAppointmentsIM(DateTime? dt);
+
     }
 
 
