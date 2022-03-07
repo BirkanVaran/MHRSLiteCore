@@ -1,5 +1,6 @@
 ﻿using MHRSLiteEntityLayer.IdentityModels;
 using MHRSLiteEntityLayer.Model;
+using MHRSLiteEntityLayer.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -12,11 +13,11 @@ namespace MHRSLiteDataLayer
 {
     public class MyContext : IdentityDbContext<AppUser, AppRole, string>
     {
-        public MyContext(DbContextOptions<MyContext> options) : base(options)
+        public MyContext(DbContextOptions<MyContext> options)
+            : base(options)
         {
 
         }
-
         public virtual DbSet<City> Cities { get; set; }
         public virtual DbSet<District> Districts { get; set; }
         public virtual DbSet<Doctor> Doctors { get; set; }
@@ -25,7 +26,8 @@ namespace MHRSLiteDataLayer
         public virtual DbSet<Clinic> Clinics { get; set; }
         public virtual DbSet<HospitalClinic> HospitalClinics { get; set; }
         public virtual DbSet<AppointmentHour> AppointmentHours { get; set; }
-        public virtual DbSet<Appointment>  Appointments { get; set; }
+        public virtual DbSet<Appointment> Appointments { get; set; }
+        public virtual DbSet<Deneme> Denemeler { get; set; }
 
     }
 }

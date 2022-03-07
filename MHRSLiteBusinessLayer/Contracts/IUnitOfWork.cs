@@ -18,5 +18,8 @@ namespace MHRSLiteBusinessLayer.Contracts
         IAppointmentRepository AppointmentRepository { get; }
         IAppointmentHourRepository AppointmentHourRepository { get; }
 
+        IDenemeRepository DenemeRepository { get; }
+
+
     }
 }

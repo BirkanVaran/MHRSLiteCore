@@ -34,6 +34,7 @@ namespace MHRSLiteBusinessLayer.Implementations
             AppointmentRepository =
                 new AppointmentRepository(_myContext, _mapper, _userManager);
             AppointmentHourRepository = new AppointmentHourRepository(_myContext);
+            DenemeRepository = new DenemeRepository(_myContext);
         }
 
         public ICityRepository CityRepository { get; private set; }
@@ -53,6 +54,7 @@ namespace MHRSLiteBusinessLayer.Implementations
         public IAppointmentRepository AppointmentRepository { get; private set; }
 
         public IAppointmentHourRepository AppointmentHourRepository { get; private set; }
+        public IDenemeRepository DenemeRepository { get; private set; }
 
         public void Dispose()
         {

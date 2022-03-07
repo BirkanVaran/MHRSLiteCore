@@ -12,14 +12,15 @@ namespace MHRSLiteUI.Components
 {
     public class PatientAppointmentsViewComponent : ViewComponent
     {
-        // GLOBAL ALAN
+        //Global alan
         private readonly IUnitOfWork _unitOfWork;
 
-        // Dependency Injection
+        //Dependency Injection
         public PatientAppointmentsViewComponent(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
+
         public IViewComponentResult Invoke(int pageNumberPast = 1,
             int pageNumberFuture = 1)
         {
@@ -29,24 +30,20 @@ namespace MHRSLiteUI.Components
 
 
             //Aktif ranvular
-            var upcomingappointments = _unitOfWork.AppointmentRepository
-                                    .GetUpcomingAppointments(patientId);
+            var upcomingAppointments = _unitOfWork.AppointmentRepository
+                                    .GetUpComingAppointments(patientId);
 
             data.UpcomingAppointments =
                 PaginatedList<AppointmentVM>
-                .CreateAsync(upcomingappointments, pageNumberFuture, 4);
+                .CreateAsync(upcomingAppointments, pageNumberFuture, 4);
 
             //Geçmiş ve iptal ranvular
-            var pastAndCancelledappointments = _unitOfWork.AppointmentRepository
+            var pastAndCancelledAppointments = _unitOfWork.AppointmentRepository
                                     .GetPastAppointments(patientId);
 
             data.PastAppointments =
                 PaginatedList<AppointmentVM>
-                .CreateAsync(pastAndCancelledappointments, pageNumberPast, 4);
-
-
-
-
+                .CreateAsync(pastAndCancelledAppointments, pageNumberPast, 4);
 
 
             //data.UpcomingAppointments = _unitOfWork.AppointmentRepository
@@ -59,13 +56,7 @@ namespace MHRSLiteUI.Components
             //    x.PatientId == HttpContext.User.Identity.Name && x.AppointmentDate <= today || 
             //    (x.AppointmentDate == today && (Convert.ToInt32(x.AppointmentHour.Substring(0, 2)) < DateTime.Now.Hour || (Convert.ToInt32(x.AppointmentHour.Substring(0, 2)) == DateTime.Now.Hour && Convert.ToInt32(x.AppointmentHour.Substring(3, 2)) < DateTime.Now.Minute))), includeProperties: "HospitalClinic").ToList();
 
-
-
-
-
-
             return View(data);
         }
-
     }
 }
