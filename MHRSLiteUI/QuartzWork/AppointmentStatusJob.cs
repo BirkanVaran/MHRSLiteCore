@@ -29,7 +29,8 @@ namespace MHRSLiteUI.QuartzWork
                 //Tarihi geçmiş olanları past statüsüne çeksin
                 var appointments = _unitOfWork.AppointmentRepository
                             .GetAll(x =>
-                            x.AppointmentStatus == AppointmentStatus.Active);
+                            x.AppointmentStatus == AppointmentStatus.Active)
+                            .ToList();
                 foreach (var item in appointments)
                 {
                     //09:30
@@ -55,9 +56,10 @@ namespace MHRSLiteUI.QuartzWork
                 return Task.CompletedTask;
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 //loglanacak
+                return Task.CompletedTask;
             }
         }
     }

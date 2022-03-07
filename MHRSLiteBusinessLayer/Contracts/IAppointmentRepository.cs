@@ -10,17 +10,14 @@ namespace MHRSLiteBusinessLayer.Contracts
 {
     public interface IAppointmentRepository : IRepositoryBase<Appointment>
     {
-
-        // Gelecek randevular
-        List<AppointmentVM> GetUpcomingAppointments(string patientid);
-        // Geçmiş randevular
+        //Gideceği randevular
+        List<AppointmentVM> GetUpComingAppointments(string patientid);
+        //GEçmiş randevular
         List<AppointmentVM> GetPastAppointments(string patientid);
 
-        // Randevu aldıktan sonra email içinde pdf halinde randevu bilgilerini göndermek için randevuyu bulmamız gerek.
-        AppointmentVM GetAppointmentByID(string patientid, int hcid, DateTime AppointmentDate, string AppointmentHour);
+        //Randevu aldıktan sonra email içinde pdf halinde randevu bilgilerini göndermek için randevuyu bulmamız lazım
+        AppointmentVM GetAppointmentByID(string patientid, int hcid
+            , DateTime appointmentDate, string appoinmentHour);
         List<AppointmentVM> GetAppointmentsIM(DateTime? dt);
-
     }
-
-
 }
