@@ -1,38 +1,35 @@
-﻿using MHRSLiteEntityLayer;
+﻿using MHRSLiteBusinessLayer.Contracts;
+using MHRSLiteBusinessLayer.EmailService;
+using MHRSLiteEntityLayer;
 using MHRSLiteEntityLayer.Enums;
 using MHRSLiteEntityLayer.IdentityModels;
+using MHRSLiteEntityLayer.Model;
 using MHRSLiteUI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using MHRSLiteBusinessLayer.EmailService;
-using Microsoft.AspNetCore.Authorization;
-using MHRSLiteBusinessLayer.Contracts;
-using MHRSLiteEntityLayer.Model;
-using Microsoft.Extensions.Configuration;
 
 namespace MHRSLiteUI.Controllers
 {
     public class AccountController : Controller
     {
+        //Global alan
         private readonly UserManager<AppUser> _userManager;
-
         private readonly SignInManager<AppUser> _signInManager;
-
         private readonly RoleManager<AppRole> _roleManager;
-
         private readonly IEmailSender _emailSender;
-
         private readonly IUnitOfWork _unitOfWork;
         private readonly IConfiguration _configuration;
 
-        // Dependency Injection
+        //Dependency Injection
         public AccountController(
             UserManager<AppUser> userManager,
             SignInManager<AppUser> signInManager,
@@ -40,9 +37,6 @@ namespace MHRSLiteUI.Controllers
             IEmailSender emailSender,
             IUnitOfWork unitOfWork,
             IConfiguration configuration)
-
-
-
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -50,31 +44,14 @@ namespace MHRSLiteUI.Controllers
             _emailSender = emailSender;
             _unitOfWork = unitOfWork;
             _configuration = configuration;
-
-            CheckRoles();
         }
 
-        private void CheckRoles()
-        {
-            var allRoles = Enum.GetNames(typeof(RoleNames));
-            foreach (var item in allRoles)
-            {
-                if (!_roleManager.RoleExistsAsync(item).Result)
-                {
-                    var result = _roleManager.CreateAsync(new AppRole()
-                    {
-                        Name = item,
-                        Description = item
-                    }).Result;
-                }
-            }
-        }
 
-        #region Register
         [HttpGet]
         public IActionResult Register()
         {
             return View();
+
         }
 
         [HttpPost]
@@ -105,9 +82,7 @@ namespace MHRSLiteUI.Controllers
                     Name = model.Name,
                     Surname = model.Surname,
                     UserName = model.TCNumber,
-                    Gender = model.Gender,
-                    BirthDate=model.BirthDate
-                    
+                    Gender = model.Gender
                     //TODO: Birthdate?
                     //TODO: Phone Number?
                 };
@@ -164,56 +139,56 @@ namespace MHRSLiteUI.Controllers
 
         }
 
-        #endregion
-
-        #region ConfirmEmail
         [HttpGet]
-        public async Task<IActionResult> ConfirmEmail(string userId, string code)
+        public async Task<IActionResult> ConfirmEmail(string userId,
+            string code)
         {
             try
             {
                 if (userId == null || code == null)
                 {
-                    return NotFound("Sayfa bulunamadı.");
+                    return NotFound("Sayfa Bulunamadı!");
                 }
                 var user = await _userManager.FindByIdAsync(userId);
                 if (user == null)
                 {
-                    NotFound("Kullanıcı bulunamadı.");
+                    return NotFound("Kullanıcı Bulunamadı!");
                 }
                 code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
-
-                // Email Confirmed=1 ya da True
+                //EmailConfirmed=1 ya da True
                 var result = await _userManager.ConfirmEmailAsync(user, code);
                 if (result.Succeeded)
                 {
+                    //User pasif rolde mi?
                     if (_userManager.IsInRoleAsync(user, RoleNames.Passive.ToString()).Result)
                     {
                         await _userManager.RemoveFromRoleAsync(user, RoleNames.Passive.ToString());
                         await _userManager.AddToRoleAsync(user, RoleNames.Patient.ToString());
                     }
-                    TempData["EmailConfirmedMessage"] = "Hesabınız aktifleştirilmiştir...";
+
+                    TempData["EmailConfirmedMessage"] = "Hesabınız aktifleşmiştir...";
                     return RedirectToAction("Login", "Account");
                 }
 
-                // Login sayfasında bu TempData View ekranında kontrol edilecektir.
-                ViewBag.EmailConfirmedMessage = "Hesabınız aktifleştirilemedi...";
+                //Login sayfasında bu tempdata view ekranında kontrol edilecektir.
+
+                ViewBag.EmailConfirmedMessage = "Hesap aktifleştirme başarısızdır!";
                 return View();
             }
             catch (Exception ex)
             {
-                ViewBag.EmailConfirmedMessage = "Beklenmedik bir hata oluştu! Tekrar deneyiniz.";
+                ViewBag.EmailConfirmedMessage = "Beklenmedik bir hata oldu! Tekrar deneyiniz.";
+
                 return View();
             }
         }
-        #endregion
 
-        #region Login
         [HttpGet]
         public IActionResult Login()
         {
             return View();
         }
+
         [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
@@ -221,17 +196,18 @@ namespace MHRSLiteUI.Controllers
             {
                 if (!ModelState.IsValid)
                 {
-                    ModelState.AddModelError("", "Geçersiz veri girişi yapıldı. Verilerinizi uygun şekilde giririniz.");
+                    ModelState.AddModelError("", "Veri girişleri düzgün olmalıdır!");
                     return View(model);
-
                 }
 
-                // User'ı bulup EmailConfirmed mi, kontrol edilsin.
+                //user'ı bulup emailconfirmed kontrol edilsin.
                 var user = await _userManager.FindByNameAsync(model.UserName);
-                if (user!=null)
+                if (user != null)
                 {
-                    if (user.EmailConfirmed==false)
+                    //if (user.EmailConfirmed == false)
+                    if (!user.EmailConfirmed)
                     {
+                        //ViewBag.TheResult = "Sistemi kullanabilmeniz için üyeliğinizi aktifleştirmeniz gerekmektedir. Emailinize gönderilen aktivasyon linkine tıklayarak aktifleştirme işlemini yapabilirsiniz!";
                         ModelState.AddModelError("", "Sistemi kullanabilmeniz için üyeliğinizi aktifleştirmeniz gerekmektedir. Emailinize gönderilen aktivasyon linkine tıklayarak aktifleştirme işlemini yapabilirsiniz!");
                         return View(model);
                     }
@@ -244,20 +220,18 @@ namespace MHRSLiteUI.Controllers
                 }
                 else
                 {
-                    ModelState.AddModelError("", "Kullanıcı adı veya şifre hatalıdır.");
+                    ModelState.AddModelError("", "TCKimlik veya şifre hatalıdır!");
                     return View(model);
                 }
+
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", "Beklenmedik bir hata oluştu.");
+                ModelState.AddModelError("", "Beklenmedik bir hata oluştu!");
                 return View(model);
-
             }
         }
-        #endregion
 
-        #region Logout
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> Logout()
@@ -265,14 +239,14 @@ namespace MHRSLiteUI.Controllers
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
         }
-        #endregion
 
-        #region ResetPassword
+
         [HttpGet]
         public IActionResult ResetPassword()
         {
             return View();
         }
+
         [HttpPost]
         public async Task<IActionResult> ResetPassword(string email)
         {
@@ -281,24 +255,24 @@ namespace MHRSLiteUI.Controllers
                 var user = await _userManager.FindByEmailAsync(email);
                 if (user == null)
                 {
-                    ViewBag.ResetPasswordMessage = "Girdiğiniz e-mail adresi ile kayıtlı bir kullanıcı bulunamadı.";
+                    ViewBag.ResetPasswordMessage = "Girdiğiniz email bulunamadı";
                 }
                 else
                 {
                     var code = await _userManager.GeneratePasswordResetTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                     var callBackUrl = Url.Action("ConfirmResetPassword", "Account", new { userId = user.Id, code = code }, protocol: Request.Scheme);
+
                     var emailMessage = new EmailMessage()
                     {
                         Contacts = new string[] { user.Email },
                         Subject = "MHRSLITE - Şifremi unuttum",
                         Body = $"Merhaba {user.Name} {user.Surname}," +
-                       $" <br/>Yeni parola belirlemek için" +
-                       $" <a href='{HtmlEncoder.Default.Encode(callBackUrl)}'>buraya</a> tıklayınız. "
+                        $" <br/>Yeni parola belirlemek için" +
+                        $" <a href='{HtmlEncoder.Default.Encode(callBackUrl)}'>buraya</a> tıklayınız. "
                     };
                     await _emailSender.SendAsync(emailMessage);
-                    ViewBag.ResetPasswordMessage = "Parola güncelleme yönergesi e-mail adresinize gönderilmiştir. Lütfen gelen kutunuzu kontrol edin.";
-
+                    ViewBag.ResetPasswordMessage = "Emailinize şifre güncelleme yönergesi gönderilmiştir.";
                 }
                 return View();
             }
@@ -308,15 +282,14 @@ namespace MHRSLiteUI.Controllers
                 return View();
             }
         }
-        #endregion
 
-        #region ConfirmResetPassword
         [HttpGet]
         public IActionResult ConfirmResetPassword(string userId, string code)
         {
             if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(code))
             {
-                ModelState.AddModelError(string.Empty, "Kullanıcı bulunamadı.");
+                // return BadRequest("deneme");
+                ModelState.AddModelError(string.Empty, "Kullanıcı bulunamadı!");
                 return View();
             }
 
@@ -328,14 +301,12 @@ namespace MHRSLiteUI.Controllers
         [HttpPost]
         public async Task<IActionResult> ConfirmResetPassword(ResetPasswordViewModel model)
         {
-
             try
             {
                 if (!ModelState.IsValid)
                 {
                     return View(model);
                 }
-
                 var user = await _userManager.FindByIdAsync(model.UserId);
                 if (user == null)
                 {
@@ -346,24 +317,31 @@ namespace MHRSLiteUI.Controllers
                 var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Code));
 
                 var result = await _userManager.ResetPasswordAsync(user, code, model.NewPassword);
-
                 if (result.Succeeded)
                 {
-                    TempData["ConfirmResetPasswordMessage"] = "Parolanız güncellenmiştir. Yeni parolanızla giriş yapabilirsiniz.";
+                    TempData["ConfirmResetPasswordMessage"] = "Şifreniz başarılı bir şekilde değiştirildi.";
                     return RedirectToAction("Login", "Account");
                 }
                 else
                 {
-                    ModelState.AddModelError("", "Parola güncelleme işleminde bir hata oluştu!");
-                    return View();
+                    ModelState.AddModelError("", "HATA: Şifreniz değiştirilemedi!");
+                    return View(model);
                 }
+
+
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", "Beklenmedik bir hata oluştu!");
+
+                ModelState.AddModelError("", "Beklenmedik hata oluştu!");
                 return View(model);
             }
         }
-        #endregion
+
+        //public IActionResult GoogleLogin(string ReturnUrl)
+        //{
+        //yarın devam edecek.
+        //}
     }
+
 }
