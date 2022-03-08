@@ -48,7 +48,9 @@ namespace MHRSLiteUI
             //IClaimsTransformation gördüðü zaman bizim yazdýðý classý üretecek!
             services.AddScoped<IClaimsTransformation, ClaimProvider.ClaimProvider>();
             //********************************
+
             services.AddAutoMapper(typeof(Maps));
+
             services.AddAuthorization(opts =>
             {
                 opts.AddPolicy("GenderPolicy", policy =>
@@ -65,6 +67,16 @@ namespace MHRSLiteUI
             {
                 options.IdleTimeout = TimeSpan.FromSeconds(60);
             });
+
+            //Google api'den alýnan clientId ve clientSecret burada projeye dahil edildi.
+            services.AddAuthentication()
+                .AddGoogle(options =>
+                {
+                    options.ClientId = Configuration["Authentication:Google:ClientId"];
+                    options.ClientSecret = Configuration["Authentication:Google:ClientSecret"];
+                });
+
+
 
             //**********************
             services.AddIdentity<AppUser, AppRole>(opts =>
@@ -83,7 +95,9 @@ namespace MHRSLiteUI
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
+            UserManager<AppUser> userManager, RoleManager<AppRole> roleManager,
+            IUnitOfWork unitOfWork)
         {
             if (env.IsDevelopment())
             {
@@ -98,6 +112,9 @@ namespace MHRSLiteUI
             app.UseSession(); // session oturum mekanizmasý için
             app.UseAuthentication(); //login logout kullanabilmek için
             app.UseAuthorization(); //authorization attiribute kullanabilmek için
+
+            //Sabit verilerimiz eklenmesi için static metodu çaðýralým
+            CreateDefaultData.CreateData.Create(userManager, roleManager, unitOfWork, Configuration, env);
 
             app.UseEndpoints(endpoints =>
             {
